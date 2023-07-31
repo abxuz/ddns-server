@@ -1,0 +1,8 @@
+dns:
+    listen: :53
+web:
+    listen: :3000
+    auth:
+        username: admin
+        password: admin
+records: []

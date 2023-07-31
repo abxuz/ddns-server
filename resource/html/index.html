@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/index.css" />
+    <title>DDNS域名管理系统</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .el-row {
+            padding: 15px 30px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .el-table {
+            width: 100%;
+            font-size: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-table-expand {
+            font-size: 0;
+        }
+
+        .demo-table-expand label {
+            width: 90px;
+            color: #99a9bf;
+        }
+
+        .demo-table-expand .el-form-item {
+            margin-right: 0;
+            margin-bottom: 0;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <el-row>
+            <el-col :xs="10" :sm="14" :md="16" :lg="18" :xl="20">
+                <el-button type="primary" size="small" @click="showAddData">添加</el-button>
+                <el-button size="small" @click="showSystem" :loading="system.loading">系统配置</el-button>
+            </el-col>
+            <el-col :xs="14" :sm="10" :md="8" :lg="6" :xl="4">
+                <el-input size="small" placeholder="搜索" prefix-icon="el-icon-search" v-model="keyword" clearable />
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="24">
+                <el-table :data="filteredTableData" size="medium" v-loading="loading">
+                    <el-table-column label="域名" prop="domain" sortable></el-table-column>
+                    <el-table-column label="A记录" prop="ipv4" sortable></el-table-column>
+                    <el-table-column label="AAAA记录" prop="ipv6" sortable></el-table-column>
+                    <el-table-column label="操作" width="150" align="center">
+                        <template slot-scope="scope">
+                            <el-button size="mini" plain @click="showEditData(scope.row)">编辑</el-button>
+                            <el-button type="danger" size="mini" @click="deleteData(scope.row)" plain>删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-col>
+        </el-row>
+        <el-dialog :title="(set.mode === 'add'?'添加':'编辑') + '记录'" :visible.sync="set.show" width="350px">
+            <el-form :model="set.form" size="medium">
+                <el-form-item label="域名">
+                    <el-input v-model="set.form.domain" :disabled="set.mode==='edit'"></el-input>
+                </el-form-item>
+                <el-form-item label="A记录">
+                    <el-input v-model="set.form.ipv4"></el-input>
+                </el-form-item>
+                <el-form-item label="AAAA记录">
+                    <el-input v-model="set.form.ipv6"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="set.show = false" size="small">取 消</el-button>
+                <el-button type="primary" @click="setData" size="small" :loading="set.loading">确 定</el-button>
+            </div>
+        </el-dialog>
+        <el-dialog title="系统配置" :visible.sync="system.show" width="350px">
+            <el-form size="medium">
+                <el-form-item label="DNS监听地址">
+                    <el-input v-model="system.dns.listen"></el-input>
+                </el-form-item>
+                <el-form-item label="Web监听地址">
+                    <el-input v-model="system.web.listen"></el-input>
+                </el-form-item>
+                <el-form-item label="Web用户名">
+                    <el-input v-model="system.web.auth.username"></el-input>
+                </el-form-item>
+                <el-form-item label="Web密码">
+                    <el-input v-model="system.web.auth.password"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="system.show = false" size="small">取 消</el-button>
+                <el-button type="primary" @click="setSystem" size="small" :loading="system.loading">确 定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+    <script src="/static/vue.js"></script>
+    <script src="/static/axios.min.js"></script>
+    <script src="/static/element.js"></script>
+    <script src="/static/api.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: function () {
+                return {
+                    loading: false,
+
+                    set: {
+                        form: {
+                            domain: '',
+                            ipv4: '',
+                            ipv6: '',
+                        },
+                        mode: '',
+                        show: false,
+                        loading: false,
+                    },
+
+                    system: {
+                        web: {
+                            listen: '',
+                            auth: {
+                                username: '',
+                                password: '',
+                            }
+                        },
+                        dns: {
+                            listen: ''
+                        },
+                        show: false,
+                        loading: false
+                    },
+
+                    tableData: [],
+                    keyword: '',
+                }
+            },
+            computed: {
+                filteredTableData() {
+                    return this.tableData.filter(e => {
+                        for (k in e) {
+                            const v = e[k].toString()
+                            if (v.indexOf(this.keyword) != -1) {
+                                return true
+                            }
+                        }
+                        return false
+                    })
+                }
+            },
+            methods: {
+                showAddData() {
+                    this.set.form = {
+                        domain: '',
+                        ipv4: '',
+                        ipv6: '',
+                    }
+                    this.set.mode = 'add'
+                    this.set.loading = false
+                    this.set.show = true
+                },
+                showEditData(row) {
+                    this.set.form = {
+                        domain: row.domain,
+                        ipv4: row.ipv4,
+                        ipv6: row.ipv6,
+                    }
+                    this.set.mode = 'edit'
+                    this.set.loading = false
+                    this.set.show = true
+                },
+                async loadData() {
+                    this.loading = true
+                    const tableData = await this.$api.record.list()
+                    this.loading = false
+                    if (!tableData) return;
+                    this.tableData = tableData
+                },
+                async setData() {
+                    const domain = this.set.form.domain.trim(),
+                        ipv4 = this.set.form.ipv4.trim(),
+                        ipv6 = this.set.form.ipv6.trim();
+
+                    if (domain == '') {
+                        this.$message.error('域名不能为空')
+                        return
+                    }
+
+                    this.set.loading = true
+                    const r = await this.$api.record.set(domain, ipv4, ipv6)
+                    this.set.loading = false
+                    if (!r) return;
+                    this.$message.success('操作成功');
+                    this.set.show = false;
+                    this.loadData()
+                },
+                async deleteData(row) {
+                    try {
+                        await this.$confirm('确认要删除?', '提示', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        })
+                    } catch (_) {
+                        return
+                    }
+                    this.loading = true
+                    const r = await this.$api.record.delete(row.domain)
+                    this.loading = false
+                    if (!r) return;
+                    this.$message.success('操作成功')
+                    this.loadData()
+                },
+                async showSystem() {
+                    this.system.loading = true
+                    const r = await this.$api.system.get()
+                    this.system.loading = false
+                    if (!r) return
+                    r.web || (r.web = { listen: '' });
+                    r.web.auth || (r.web.auth = { username: '', password: '' })
+                    r.dns || (r.dbs = { listen: '' });
+                    this.system.web = r.web
+                    this.system.dns = r.dns
+                    this.system.show = true
+                },
+                async setSystem() {
+                    this.system.loading = true
+                    const r = await this.$api.system.set(this.system.web, this.system.dns);
+                    this.system.loading = false
+                    if(!r) return;
+                    this.$message.success('操作成功')
+                    this.system.show = false;
+                }
+            },
+            mounted() {
+                this.loadData()
+            }
+        })
+    </script>
+</body>
+
+</html>
