@@ -110,6 +110,7 @@ func (s *sWeb) createHttpHandler(config *config.Web) (http.Handler, error) {
 
 	middleware.Auth.SetAuth(config.Auth)
 	h.Use(middleware.Auth.Auth)
+	h.Use(middleware.Cache.Cache)
 
 	apiGroup := h.Group("/api/")
 	{
