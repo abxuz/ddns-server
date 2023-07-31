@@ -7,7 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/miekg/dns v1.1.55
 	github.com/spf13/cobra v1.7.0
-	github.com/xbugio/b-tools v0.0.0-20230616062923-076a55d1213f
+	github.com/xbugio/b-tools v0.0.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
