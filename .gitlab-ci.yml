@@ -12,6 +12,12 @@ build:
     stage: build
     script:
         - docker build -t ddns-server:latest .
-
+        - docker image save -o ddns-server-latest.tar ddns-server:latest
+        - gzip -9 ddns-server-latest.tar
+    artifacts:
+        name: ddns-server-latest
+        paths:
+            - "ddns-server-latest.tar.gz"
+        expire_in: "1 min"
     only:
         - main
