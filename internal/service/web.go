@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/abxuz/b-tools/bhttp"
 	"github.com/gin-gonic/gin"
-	"github.com/xbugio/b-tools/bhttp"
 )
 
 var Web = sWeb{

@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/xbugio/b-tools/bslice"
+	"github.com/abxuz/b-tools/bslice"
 	"gopkg.in/yaml.v3"
 )
 
@@ -90,7 +90,7 @@ func (c *Config) Valid() error {
 		}
 	}
 
-	ok := bslice.Unique(len(c.Records), func(i int) any { return c.Records[i].Domain })
+	ok := bslice.Unique[string, *Record](c.Records, func(r *Record) string { return r.Domain })
 	if !ok {
 		return fmt.Errorf("duplicate domain name")
 	}

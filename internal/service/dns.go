@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/abxuz/b-tools/bmap"
 	"github.com/miekg/dns"
-	"github.com/xbugio/b-tools/bmap"
 )
 
 var Dns = sDns{

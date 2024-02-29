@@ -3,8 +3,8 @@ package middleware
 import (
 	"path"
 
+	"github.com/abxuz/b-tools/bset"
 	"github.com/gin-gonic/gin"
-	"github.com/xbugio/b-tools/bset"
 )
 
 var Cache = mCache{
