@@ -35,7 +35,7 @@ func (s *sDns) ReloadRecord() error {
 	if err != nil {
 		return err
 	}
-	s.records = bmap.NewMapFromSlice[string, *config.Record](rs, func(r *config.Record) string { return r.Domain })
+	s.records = bmap.NewMapFromSlice(rs, func(r *config.Record) string { return r.Domain })
 	return nil
 }
 
@@ -99,7 +99,7 @@ func (s *sDns) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 
 	question := r.Question[0]
 	name := strings.TrimSuffix(question.Name, ".")
-	record, ok := s.records[name]
+	record, ok := s.records[strings.ToLower(name)] // Google DNS会随机大小写
 	if !ok {
 		w.WriteMsg(new(dns.Msg).SetRcode(r, dns.RcodeNameError))
 		return
